@@ -1,4 +1,5 @@
 steps:
+  # Build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
@@ -7,7 +8,30 @@ steps:
         "us-central1-docker.pkg.dev/$PROJECT_ID/smart-quotation-generator/backend",
         ".",
       ]
-#   ^ Update the image path above to match your actual Artifact Registry path if different.
+    dir: "backend" # <--- THIS IS THE CRITICAL FIX
+
+  # Push the container image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/smart-quotation-generator/backend",
+      ]
+
+  # Deploy container to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "run"
+      - "deploy"
+      - "smart-quotation-generator-backend"
+      - "--image"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/smart-quotation-generator/backend"
+      - "--region"
+      - "us-central1"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
 
 options:
   logging: CLOUD_LOGGING_ONLY
