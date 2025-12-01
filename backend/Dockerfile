@@ -31,6 +31,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 5. Copy the rest of the application code
 COPY . .
 
+# FORCE COPY DATA FOLDER (Just to be safe)
+COPY data /app/data
+
 # 6. Create storage directory
 RUN mkdir -p /app/storage/pdfs
 

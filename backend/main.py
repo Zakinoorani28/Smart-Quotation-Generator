@@ -181,13 +181,13 @@ async def finalize_quotation(req: FinalizeRequest):
     pdf_path = os.path.join("storage", "pdfs", pdf_filename)
     generate_pdf_from_html(html_output, pdf_path)
 
-    # LIVE CLOUD URL
-    BASE_URL = "https://smag-backend-1051387132770.us-central1.run.app"
+    # 7. Optional Review
+    # review_notes = review_agent.validate(product_dicts)
 
     return {
         "success": True,
         "invoice_no": invoice_no,
-        "pdf_url": f"{BASE_URL}/pdf/{pdf_filename}", # <--- Updated here
+        "pdf_url": f"http://127.0.0.1:8000/pdf/{pdf_filename}",
         "grand_total": grand_total
     }
 
@@ -204,15 +204,12 @@ async def get_history():
     # Get all PDF files
     paths = sorted(glob.glob(os.path.join(pdf_dir, "*.pdf")), key=os.path.getmtime, reverse=True)
     
-    # LIVE CLOUD URL
-    BASE_URL = "https://smag-backend-1051387132770.us-central1.run.app"
-
     for p in paths:
         filename = os.path.basename(p)
         timestamp = datetime.fromtimestamp(os.path.getmtime(p)).strftime("%Y-%m-%d %H:%M")
         files.append({
             "filename": filename,
-            "url": f"{BASE_URL}/pdf/{filename}",
+            "url": f"http://127.0.0.1:8000/pdf/{filename}",
             "created_at": timestamp
         })
     return files
