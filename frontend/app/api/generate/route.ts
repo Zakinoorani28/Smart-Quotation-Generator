@@ -1,22 +1,15 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
+import { API_BASE_URL } from "../../../lib/config";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // DYNAMIC CONFIGURATION:
-    // 1. Checks for server-only variable (Best practice for secrets)
-    // 2. Checks for public variable (Common in Next.js setups)
-    // 3. Fallback to localhost (For local development)
-    const API_URL =
-      process.env.BACKEND_URL ||
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "http://127.0.0.1:8000";
+    // Debug log to see where it's connecting in Vercel logs
+    console.log(`[Proxy] Connecting to Backend: ${API_BASE_URL}`);
 
-    console.log(`Sending request to: ${API_URL}/generate-quotation`); // Helpful for debugging logs
-
-    const response = await axios.post(`${API_URL}/generate-quotation`, {
+    const response = await axios.post(`${API_BASE_URL}/generate-quotation`, {
       prompt: body.prompt,
     });
 

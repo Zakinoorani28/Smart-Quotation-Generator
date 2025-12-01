@@ -34,6 +34,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- DYNAMIC URL LOGIC ---
+def get_base_url():
+    # 1. In Cloud Run, we set this Variable manually
+    public_url = os.getenv("PUBLIC_URL")
+    if public_url:
+        return public_url.rstrip("/")
+    
+    # 2. In Local Development, we fallback to localhost
+    return "http://127.0.0.1:8000"
+
+BASE_URL = get_base_url()
+
 # ====================================================
 # DATA MODELS
 # ====================================================
@@ -187,7 +199,7 @@ async def finalize_quotation(req: FinalizeRequest):
     return {
         "success": True,
         "invoice_no": invoice_no,
-        "pdf_url": f"http://127.0.0.1:8000/pdf/{pdf_filename}",
+        "pdf_url": f"{BASE_URL}/pdf/{pdf_filename}",  # <--- Uses dynamic URL
         "grand_total": grand_total
     }
 
@@ -209,7 +221,7 @@ async def get_history():
         timestamp = datetime.fromtimestamp(os.path.getmtime(p)).strftime("%Y-%m-%d %H:%M")
         files.append({
             "filename": filename,
-            "url": f"http://127.0.0.1:8000/pdf/{filename}",
+            "url": f"{BASE_URL}/pdf/{filename}",      # <--- Uses dynamic URL
             "created_at": timestamp
         })
     return files

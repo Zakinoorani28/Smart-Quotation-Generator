@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import SmartSearch from "../components/SmartSearch";
+import { API_BASE_URL } from "../lib/config";
 
 /* ---------------------------------------------------------
     TYPES
@@ -94,9 +95,8 @@ export default function Home() {
   /* ---------------- HISTORY FETCH ---------------- */
   const fetchHistory = async () => {
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-      const res = await axios.get(`${API_URL}/history`);
+      // Uses dynamic URL
+      const res = await axios.get(`${API_BASE_URL}/history`);
       setHistory(res.data);
     } catch (e) {
       console.error("History load failed", e);
@@ -106,9 +106,8 @@ export default function Home() {
   const deleteHistory = async (filename: string) => {
     if (!confirm("Delete this file?")) return;
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-      await axios.delete(`${API_URL}/history/${filename}`);
+      await axios.delete(`${API_BASE_URL}/history/${filename}`);
+      fetchHistory();
       fetchHistory();
     } catch (e) {
       console.error("Delete failed", e);
@@ -151,10 +150,9 @@ export default function Home() {
     setProducts([]);
 
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-      // Corrected: .post() syntax was broken
-      const res = await axios.post(`${API_URL}/analyze-request`, { prompt });
+      const res = await axios.post(`${API_BASE_URL}/analyze-request`, {
+        prompt,
+      });
 
       if (res.data.success) {
         setProducts(res.data.products);
@@ -220,10 +218,10 @@ export default function Home() {
         products,
       };
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-      // Corrected: Use .post() and pass payload as second argument
-      const res = await axios.post(`${API_URL}/finalize-quotation`, payload);
+      const res = await axios.post(
+        `${API_BASE_URL}/finalize-quotation`,
+        payload
+      );
 
       if (res.data.success) {
         setFinalResult(res.data);

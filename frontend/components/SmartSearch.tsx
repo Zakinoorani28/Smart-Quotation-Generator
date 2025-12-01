@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../lib/config";
 import { Search, Package, Plus, Loader2, X } from "lucide-react";
 
 // Define what the backend sends us (Raw Data)
@@ -40,9 +41,7 @@ export default function SmartSearch({ onAddProduct }: SmartSearchProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const API_URL =
-          process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-        const res = await axios.get(`${API_URL}/products`);
+        const res = await axios.get(`${API_BASE_URL}/products`);
 
         let data: RawProduct[] = [];
 
