@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+adk
+google-generativeai
+jinja2
+python-multipart
+pydantic
+weasyprint
+requests
+python-dotenv
+pillow
+# google-cloud-storage  <-- Only uncomment if you actually use this in code
+# google-cloud-secret-manager <-- Only uncomment if you actually use this in code

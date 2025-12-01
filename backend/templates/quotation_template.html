@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Enterprise Quotation {{ invoice_no }} </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
+
+        /* --- WeasyPrint Page Setup --- */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        :root {
+            --primary: #2563eb;
+            /* Bright Enterprise Blue */
+            --dark: #0f172a;
+            --light-gray: #f1f5f9;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #334155;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* The Flexbox Layout */
+        .page-container {
+            width: 210mm;
+            min-height: 297mm;
+            /* Force full A4 height */
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .content-wrap {
+            flex: 1;
+            /* Takes up all available space */
+            padding: 15mm 15mm 0 15mm;
+            /* Top/Side padding */
+        }
+
+        /* --- HEADER STYLES --- */
+        .header-table {
+            width: 100%;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+        }
+
+        .brand-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-sub {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .doc-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #cbd5e1;
+            /* Light gray text for "QUOTATION" */
+            text-align: right;
+            text-transform: uppercase;
+        }
+
+        /* --- META INFO --- */
+        .info-grid {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .client-box {
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .meta-table td {
+            padding: 3px 0;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: #64748b;
+            padding-right: 10px;
+        }
+
+        .meta-val {
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* --- PRODUCT TABLE --- */
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .product-table thead th {
+            background-color: var(--dark);
+            /* Dark header for contrast */
+            color: #ffffff;
+            text-align: left;
+            padding: 12px 15px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 4px 4px 0 0;
+            /* Rounded corners on header */
+        }
+
+        .product-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .product-table td {
+            padding: 15px 10px;
+            vertical-align: top;
+            /* Align top for better layout */
+        }
+
+        /* Column Widths */
+        .col-img {
+            width: 60px;
+        }
+
+        .col-info {
+            width: auto;
+        }
+
+        .col-qty {
+            width: 70px;
+            text-align: center;
+        }
+
+        .col-price {
+            width: 100px;
+            text-align: right;
+        }
+
+        .col-total {
+            width: 110px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Product Image Styling */
+        .prod-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 6px;
+            border: 1px solid #f1f5f9;
+            background: white;
+            display: block;
+        }
+
+        .no-img {
+            width: 50px;
+            height: 50px;
+            background: #f1f5f9;
+            color: #94a3b8;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .prod-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .prod-sku {
+            font-size: 10px;
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .prod-desc {
+            font-size: 10px;
+            color: #64748b;
+            display: block;
+            margin-top: 6px;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+
+        /* --- TOTALS SECTION --- */
+        .totals-container {
+            margin-top: 30px;
+            page-break-inside: avoid;
+            /* Prevents splitting */
+            width: 100%;
+        }
+
+        .totals-table {
+            width: 45%;
+            float: right;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 8px 15px;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .grand-total-row td {
+            background-color: var(--primary);
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            padding: 12px 15px;
+            border-radius: 6px;
+        }
+
+        /* --- PROFESSIONAL FOOTER --- */
+        .footer {
+            background-color: #f8fafc;
+            border-top: 4px solid var(--primary);
+            padding: 20px 15mm 20px 15mm;
+            /* Match page margin */
+            text-align: center;
+            margin-top: auto;
+            /* Pushes footer to bottom of flex container */
+        }
+
+        .terms {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .thank-you {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <div class="content-wrap">
+
+            <table class="header-table">
+                <tr>
+                    <td valign="top">
+                        <div class="brand-name">Smart Quote AI</div>
+                        <div class="brand-sub">Enterprise Network Solutions</div>
+                        <div class="brand-sub" style="margin-top:2px;">Karachi, Pakistan</div>
+                    </td>
+                    <td valign="top" align="right">
+                        <div class="doc-title">Quotation</div>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="info-grid">
+                <tr>
+                    <td width="60%" valign="top">
+                        <div class="client-box">
+                            <span
+                                style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:700;">Quotation
+                                For:</span><br>
+                            <strong style="font-size:14px; color:#0f172a;">{{ customer_name }}</strong><br>
+                            <span style="font-size:12px; color:#64748b;">Sales Department</span>
+                        </div>
+                    </td>
+                    <td width="40%" valign="top" align="right">
+                        <table class="meta-table" align="right">
+                            <tr>
+                                <td class="meta-label">Date:</td>
+                                <td class="meta-val">{{ date_today }}</td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Quote #:</td>
+                                <td class="meta-val" style="color:var(--primary);">{{ invoice_no }}</td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Valid Until:</td>
+                                <td class="meta-val">{{ valid_until }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th class="col-img">Item</th>
+                        <th class="col-info">Description</th>
+                        <th class="col-qty">Qty</th>
+                        <th class="col-price">Unit Price</th>
+                        <th class="col-total">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="col-img">
+                            {% if item.base64_image %}
+                            <img src="{{ item.base64_image }}" class="prod-thumb">
+                            {% else %}
+                            <div class="no-img">No Image</div>
+                            {% endif %}
+                        </td>
+                        <td class="col-info">
+                            <span class="prod-name">{{ item.name }}</span>
+                            <span class="prod-sku">{{ item.sku }}</span>
+                            <!-- <span class="prod-desc">{{ item.short_description }}</span> -->
+                        </td>
+                        <td class="col-qty">
+                            <span
+                                style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:600; font-size:11px;">{{
+                                item.quantity }}</span>
+                        </td>
+                        <td class="col-price">${{ "{:,.2f}".format(item.unit_price) }}</td>
+                        <td class="col-total">${{ "{:,.2f}".format(item.line_total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="totals-container">
+                <table class="totals-table">
+                    <tr>
+                        <td style="color:#64748b;">Subtotal</td>
+                        <td style="font-weight:600;">${{ "{:,.2f}".format(total) }}</td>
+                    </tr>
+                    {% if discount_amount > 0 %}
+                    <tr>
+                        <td style="color:#ef4444;">Discount ({{ discount_rate }}%)</td>
+                        <td style="font-weight:500;">-${{ "{:,.2f}".format(discount_amount) }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td style="color:#64748b;">Tax ({{ tax_rate }}%)</td>
+                        <td style="font-weight:400;">${{ "{:,.2f}".format(tax_amount) }}</td>
+                    </tr>
+                    <tr style="height: 10px;"></tr>
+                    <tr class="grand-total-row">
+                        <td>Grand Total</td>
+                        <td>${{ "{:,.2f}".format(total) }}</td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+        <div class="footer">
+            <div class="terms">
+                <strong>Payment Terms:</strong> 50% Advance payment required to confirm order, balance on delivery.<br>
+                <strong>Warranty:</strong> Standard manufacturer warranty applies. Claims processed as per policy.<br>
+                <strong>Validity:</strong> This quotation is valid for 30 days from the date of issue.
+            </div>
+            <div class="thank-you">Thank you for your business</div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
