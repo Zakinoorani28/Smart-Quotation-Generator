@@ -255,7 +255,7 @@ export default function Home() {
   --------------------------------------------------------- */
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 text-slate-800 pb-24">
+    <main className="bg-gradient-to-br from-slate-50 to-slate-200 text-slate-800">
       {/* ------------------------------------------------ HEADER ------------------------------------------------ */}
       <header className="bg-white/70 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -734,8 +734,8 @@ export default function Home() {
       )}
 
       {/* FOOTER SECTION */}
-      <div className="mt-16 border-t border-gray-200 bg-white py-6">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+      <div className="mt-auto border-t border-gray-200 bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <Image
               src="/logo.png"
@@ -744,7 +744,7 @@ export default function Home() {
               height={20}
               className="opacity-70"
             />
-            <span className="font-bold text-gray-700">
+            <span className="font-bold text-gray-600">
               S-MAG: Smart Multi-Agent Quotation Generator
             </span>
           </div>
@@ -753,10 +753,10 @@ export default function Home() {
               &copy; {new Date().getFullYear()} Developed by{" "}
               <span className="font-semibold text-blue-600">Zaki Noorani</span>
             </p>
-            <p className="mt-1">
+            <p className="mt-0.5">
               Powered by{" "}
-              <span className="font-semibold text-gray-600">Gemini</span> and{" "}
-              <span className="font-semibold text-gray-600">Google ADK</span>
+              <span className="font-medium text-gray-700">Gemini</span> and{" "}
+              <span className="font-medium text-gray-700">Google ADK</span>
             </p>
           </div>
         </div>
