@@ -40,9 +40,10 @@ export default function SmartSearch({ onAddProduct }: SmartSearchProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const API_URL =
-          process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-        const res = await axios.get(`${API_URL}/products`);
+        // Hardcoded Cloud Backend URL to fix connection issues
+        const res = await axios.get(
+          "https://smag-backend-1051387132770.us-central1.run.app/products"
+        );
 
         let data: RawProduct[] = [];
 

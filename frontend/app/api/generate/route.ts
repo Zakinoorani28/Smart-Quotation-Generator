@@ -5,16 +5,12 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   // FIX: Use Environment Variable for Production
-  const API_URL =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+  const API_URL = "https://smag-backend-1051387132770.us-central1.run.app";
 
   try {
-    const response = await axios.post(
-      `${API_URL}/generate-quotation`, // <--- Dynamic URL here
-      {
-        prompt: body.prompt,
-      }
-    );
+    const response = await axios.post(`${API_URL}/generate-quotation`, {
+      prompt: body.prompt,
+    });
 
     return NextResponse.json(response.data);
   } catch (err: unknown) {

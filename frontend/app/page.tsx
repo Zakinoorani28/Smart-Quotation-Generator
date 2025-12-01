@@ -91,8 +91,7 @@ export default function Home() {
   /* ---------------- HISTORY FETCH ---------------- */
   const fetchHistory = async () => {
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+      const API_URL = "https://smag-backend-1051387132770.us-central1.run.app";
       const res = await axios.get(`${API_URL}/history`);
       setHistory(res.data);
     } catch (e) {
@@ -103,8 +102,7 @@ export default function Home() {
   const deleteHistory = async (filename: string) => {
     if (!confirm("Delete this file?")) return;
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+      const API_URL = "https://smag-backend-1051387132770.us-central1.run.app";
       await axios.delete(`${API_URL}/history/${filename}`);
       fetchHistory();
     } catch (e) {
@@ -148,8 +146,8 @@ export default function Home() {
     setProducts([]);
 
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+      // Updated API URL
+      const API_URL = "https://smag-backend-1051387132770.us-central1.run.app";
       // Corrected: .post() syntax was broken
       const res = await axios.post(`${API_URL}/analyze-request`, { prompt });
 
@@ -217,8 +215,7 @@ export default function Home() {
         products,
       };
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+      const API_URL = "https://smag-backend-1051387132770.us-central1.run.app";
       // Corrected: Use .post() and pass payload as second argument
       const res = await axios.post(`${API_URL}/finalize-quotation`, payload);
 

@@ -22,7 +22,7 @@ A single typo in a SKU can cost thousands of dollars in returns. **S-MAG solves 
 
 S-MAG is not just a chatbot. It is a **Multi-Agent System** that orchestrates specialized tasks:
 
-1.  **🧠 Extraction Agent (Gemini 1.5 Flash):** Parses unstructured voice/text (e.g., _"Need 5 biometric locks for Microtech Inc"_) into structured JSON.
+1.  **🧠 Extraction Agent (Gemini 2.5 Flash):** Parses unstructured voice/text (e.g., _"Need 5 biometric locks for Microtech Inc"_) into structured JSON.
 2.  **📦 Product Resolution Agent:** Uses fuzzy logic + token-based matching to find exact SKUs (e.g., maps "unifi 48 switch" -> `US-48-500W`).
 3.  **💰 Pricing Agent:** Handles unit price retrieval, currency standardization, and line-item calculations.
 4.  **🎨 Formatting Agent:** Generates pixel-perfect, branded PDF quotations with embedded product images.
@@ -40,7 +40,7 @@ S-MAG is not just a chatbot. It is a **Multi-Agent System** that orchestrates sp
 
 - **Frontend:** Next.js 14 (React), Tailwind CSS, Lucide UI.
 - **Backend:** FastAPI (Python 3.11), Uvicorn.
-- **AI Engine:** Google Gemini 1.5 Flash via Google AI Studio.
+- **AI Engine:** Google Gemini 2.5 Flash via Google AI Studio.
 - **PDF Engine:** WeasyPrint (Headless).
 - **Deployment:** Google Cloud Run (Backend) + Vercel (Frontend).
 
