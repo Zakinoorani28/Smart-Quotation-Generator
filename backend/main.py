@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import glob
 import os
+import base64
 from datetime import datetime
 
 #AGENTS
@@ -19,6 +20,11 @@ from tools.invoice_manager import get_next_invoice_number
 
 from dotenv import load_dotenv
 load_dotenv()
+
+# --- CONFIGURATION ---
+STORAGE_DIR = "storage"
+PDF_DIR = os.path.join(STORAGE_DIR, "pdfs")
+os.makedirs(PDF_DIR, exist_ok=True)
 
 # ====================================================
 # FASTAPI APP
@@ -36,7 +42,6 @@ app.add_middleware(
 
 # --- DYNAMIC URL LOGIC ---
 def get_base_url():
-    # 1. In Cloud Run, we set this Variable manually
     public_url = os.getenv("PUBLIC_URL")
     if public_url:
         return public_url.rstrip("/")
@@ -163,7 +168,7 @@ async def finalize_quotation(req: FinalizeRequest):
         if p_dict.get('thumbnail'):
             p_dict['base64_image'] = image_to_base64(p_dict.get('thumbnail'))
         else:
-             p_dict['base64_image'] = None
+            p_dict['base64_image'] = None
         product_dicts.append(p_dict)
 
     # 3. Get Sequential Invoice Number
@@ -193,13 +198,16 @@ async def finalize_quotation(req: FinalizeRequest):
     pdf_path = os.path.join("storage", "pdfs", pdf_filename)
     generate_pdf_from_html(html_output, pdf_path)
 
-    # 7. Optional Review
-    # review_notes = review_agent.validate(product_dicts)
+    with open(pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+        encoded_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
 
     return {
         "success": True,
         "invoice_no": invoice_no,
-        "pdf_url": f"{BASE_URL}/pdf/{pdf_filename}",  # <--- Uses dynamic URL
+        "filename": pdf_filename,            
+        "pdf_url": f"{BASE_URL}/pdf/{pdf_filename}",
+        "pdf_base64": encoded_pdf,            
         "grand_total": grand_total
     }
 

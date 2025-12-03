@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -35,14 +36,6 @@ export const metadata: Metadata = {
       "Generate professional quotations instantly using AI-driven multi-agent intelligence. Supports SKU detection, pricing, review, and PDF export.",
     url: "https://smart-quotation-generator.vercel.app/",
     siteName: "SmartQuote.ai",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "SmartQuote.ai — AI Powered Quotation Generator",
-      },
-    ],
     type: "website",
   },
   icons: {
@@ -62,6 +55,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

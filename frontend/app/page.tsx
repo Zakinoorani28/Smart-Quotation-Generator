@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import SmartSearch from "../components/SmartSearch";
+// Ensure this path matches your folder structure (frontend/lib/config.ts)
 import { API_BASE_URL } from "../lib/config";
 
 /* ---------------------------------------------------------
@@ -42,6 +43,8 @@ interface QuotationResult {
   success: boolean;
   invoice_no: string;
   pdf_url: string;
+  filename: string;
+  pdf_base64?: string; // Optional because old records might not have it
   grand_total: number;
 }
 
@@ -51,7 +54,7 @@ interface HistoryItem {
   created_at: string;
 }
 
-// Speech Recognition
+// Speech Recognition Type Definition
 declare global {
   interface Window {
     webkitSpeechRecognition: any;
@@ -62,9 +65,6 @@ declare global {
     MAIN COMPONENT
 --------------------------------------------------------- */
 export default function Home() {
-  // --- ADD THIS CONSTANT ---
-  const BACKEND_URL = "https://smag-backend-1051387132770.us-central1.run.app";
-
   /* ---------------- STATE ---------------- */
   const [prompt, setPrompt] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -95,7 +95,7 @@ export default function Home() {
   /* ---------------- HISTORY FETCH ---------------- */
   const fetchHistory = async () => {
     try {
-      // Uses dynamic URL
+      // Uses dynamic URL from config
       const res = await axios.get(`${API_BASE_URL}/history`);
       setHistory(res.data);
     } catch (e) {
@@ -103,31 +103,66 @@ export default function Home() {
     }
   };
 
+  // Load history on mount
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
   const deleteHistory = async (filename: string) => {
     if (!confirm("Delete this file?")) return;
     try {
       await axios.delete(`${API_BASE_URL}/history/${filename}`);
-      fetchHistory();
       fetchHistory();
     } catch (e) {
       console.error("Delete failed", e);
     }
   };
 
-  /* ---------------- FORCE DOWNLOAD ---------------- */
-  const forceDownload = (url: string, filename: string) => {
-    const a = document.createElement("a");
-    a.href = `${url}?download=true`;
-    a.setAttribute("download", filename);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  /* ---------------------------------------------------------
+    CRITICAL: DOWNLOAD HELPER FUNCTIONS
+  --------------------------------------------------------- */
+
+  // 1. DOWNLOAD FROM BASE64 (For Instant "Generate" Result)
+  // This bypasses server URL issues by creating the file in browser memory.
+  const downloadFromBase64 = (base64Data: string, filename: string) => {
+    const linkSource = `data:application/pdf;base64,${base64Data}`;
+    const downloadLink = document.createElement("a");
+    downloadLink.href = linkSource;
+    downloadLink.download = filename;
+    downloadLink.click();
+  };
+
+  // 2. DOWNLOAD HISTORY (For History Tab)
+  // This fetches the file data fresh from the backend, ignoring broken DB links.
+  const handleHistoryDownload = async (filename: string) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/pdf/${filename}`, {
+        responseType: "blob", // Important: Treat response as binary file
+      });
+
+      // Create a temporary URL for the downloaded blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert(
+        "Failed to download. The file might have been deleted by the server (Cloud Run is stateless)."
+      );
+    }
   };
 
   /* ---------------- VOICE INPUT ---------------- */
   const toggleVoiceInput = () => {
     if (!window.webkitSpeechRecognition) {
-      alert("Voice input not supported.");
+      alert("Voice input not supported in this browser.");
       return;
     }
 
@@ -144,6 +179,7 @@ export default function Home() {
     isListening ? recog.stop() : recog.start();
   };
 
+  /* ---------------- ANALYZE REQUEST ---------------- */
   const generateQuotation = async () => {
     setAnalyzing(true);
     setFinalResult(null);
@@ -201,7 +237,7 @@ export default function Home() {
   const taxAmt = taxable * (taxRate / 100);
   const grandTotal = taxable + taxAmt;
 
-  /* ---------------- Handle Finalize ---------------- */
+  /* ---------------- FINALIZE & GENERATE PDF ---------------- */
   const handleFinalize = async () => {
     if (products.length === 0)
       return alert("Please analyze the quotation first.");
@@ -223,16 +259,23 @@ export default function Home() {
         payload
       );
 
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         setFinalResult(res.data);
-        fetchHistory();
+        fetchHistory(); // Refresh history list
+
+        // AUTO-DOWNLOAD: Check if we got the raw file data
+        if (res.data.pdf_base64) {
+          downloadFromBase64(res.data.pdf_base64, res.data.filename);
+        } else {
+          alert(`Generated! Invoice #${res.data.invoice_no}`);
+        }
       }
     } catch (err) {
       console.error("Finalize Error:", err);
       alert("PDF generation failed.");
+    } finally {
+      setGenerating(false);
     }
-
-    setGenerating(false);
   };
 
   /* ---------------- UPDATE FUNCTIONS ---------------- */
@@ -252,14 +295,13 @@ export default function Home() {
     setProducts(products.filter((_, x) => x !== i));
 
   /* ---------------------------------------------------------
-     UI START
+      UI START
   --------------------------------------------------------- */
-
   return (
-    <main className="bg-gradient-to-br from-slate-50 to-slate-200 text-slate-800">
-      {/* ------------------------------------------------ HEADER ------------------------------------------------ */}
+    <main className="bg-linear-to-br from-slate-50 to-slate-200 text-slate-800">
+      {/* ---------------- HEADER ---------------- */}
       <header className="bg-white/70 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Image
               src="/logo.png"
@@ -280,7 +322,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ------------------------------------------------ TABS ------------------------------------------------ */}
+      {/* ---------------- TABS ---------------- */}
       <div className="flex bg-white p-1 rounded-xl shadow-inner w-max mx-auto mt-8">
         <button
           onClick={() => setActiveTab("create")}
@@ -304,8 +346,8 @@ export default function Home() {
         </button>
       </div>
 
-      {/* ------------------------------------------------ TITLE ------------------------------------------------ */}
-      <section className="text-center mt-12 mb-14 px-6">
+      {/* ---------------- TITLE ---------------- */}
+      <section className="text-center mt-8 mb-8 px-6">
         <div className="inline-flex items-center gap-2 bg-white px-5 py-2 rounded-full border shadow-sm mb-4">
           <span className="bg-indigo-100 text-indigo-600 p-1.5 rounded-full">
             <Sparkles size={18} />
@@ -317,7 +359,7 @@ export default function Home() {
 
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
           Smart Quotation{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-blue-600">
             Generator
           </span>
         </h1>
@@ -328,9 +370,9 @@ export default function Home() {
         </p>
       </section>
 
-      {/* ------------------------------------------------ CREATE TAB ------------------------------------------------ */}
+      {/* ---------------- CREATE TAB ---------------- */}
       {activeTab === "create" && (
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-5xl px-6 mx-auto mb-10">
           {/* --- INPUT AREA --- */}
           <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-7 mb-10">
             <h2 className="text-2xl font-bold text-gray-900">
@@ -345,7 +387,7 @@ export default function Home() {
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="E.g., Need quote for 1 UXG-Enterprise, 3 E7 APs and 6 UVC-G6 Dome Cameras for Google"
+              placeholder="E.g., Need quote of 1 UXG-Enterprise, 3 E7 APs for Google"
               className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 min-h-[120px] text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none"
             />
 
@@ -378,7 +420,7 @@ export default function Home() {
                     ${
                       generating || !prompt.trim()
                         ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-gradient-to-r from-indigo-600 to-blue-600 hover:-translate-y-0.5"
+                        : "bg-linear-to-r from-indigo-600 to-blue-600 hover:-translate-y-0.5"
                     }`}
                 >
                   {analyzing ? (
@@ -565,6 +607,8 @@ export default function Home() {
                       <span className="text-sm">Discount (%)</span>
                       <input
                         type="number"
+                        min="0"
+                        max="100"
                         value={discountRate}
                         onChange={(e) =>
                           setDiscountRate(Number(e.target.value))
@@ -576,6 +620,8 @@ export default function Home() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Tax (%)</span>
                       <input
+                        min="0"
+                        max="100"
                         type="number"
                         value={taxRate}
                         onChange={(e) => setTaxRate(Number(e.target.value))}
@@ -614,22 +660,31 @@ export default function Home() {
 
                       <div className="flex gap-3">
                         <button
-                          onClick={() => setFinalResult(null)}
-                          className="px-4 py-2 text-sm font-semibold border-1 text-green-700 hover:bg-green-100 rounded-lg"
+                          onClick={() => {
+                            setFinalResult(null);
+                          }}
+                          className="px-4 py-2 text-sm font-semibold border text-green-700 hover:bg-green-100 rounded-lg"
                         >
                           Create Another
                         </button>
 
                         <button
-                          onClick={() =>
-                            forceDownload(
-                              finalResult.pdf_url,
-                              `${finalResult.invoice_no}.pdf`
-                            )
-                          }
+                          onClick={() => {
+                            if (finalResult.pdf_base64) {
+                              // OPTION A: Instant Download (Prod & Local)
+                              downloadFromBase64(
+                                finalResult.pdf_base64,
+                                finalResult.filename
+                              );
+                            } else {
+                              // OPTION B: Fallback
+                              alert("PDF Base64 data missing. Trying URL...");
+                              window.open(finalResult.pdf_url, "_blank");
+                            }
+                          }}
                           className="bg-green-600 hover:bg-green-700 text-white flex items-center px-6 py-3.5 rounded-lg font-bold shadow-lg"
                         >
-                          <Download size={20} /> Download PDF
+                          <Download size={20} className="mr-2" /> Download PDF
                         </button>
                       </div>
                     </div>
@@ -656,10 +711,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* ------------------------------------------------ HISTORY TAB ------------------------------------------------ */}
+      {/* ---------------- HISTORY TAB ---------------- */}
       {activeTab === "history" && (
-        <div className="max-w-4xl mx-auto px-6 mt-8 bg-white rounded-3xl shadow-xl border">
-          <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+        <div className="max-w-5xl mx-auto px-6 pb-20 mt-6 mb-6 bg-white rounded-3xl shadow-xl border">
+          <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
                 Quotation History
@@ -691,7 +746,7 @@ export default function Home() {
             history.map((file, i) => (
               <div
                 key={i}
-                className="p-5 flex justify-between items-center border-b hover:bg-gray-50"
+                className="p-5 flex justify-between items-center gap-4 border-b hover:bg-gray-50"
               >
                 <div className="flex items-center gap-4">
                   <div className="bg-blue-50 text-blue-600 p-3 rounded-xl">
@@ -706,16 +761,19 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  {/* View Button - Falls back to Rewrite logic */}
                   <a
-                    href={file.url}
+                    href={`/pdf/${file.filename}`}
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="px-4 py-2 bg-white border rounded-lg text-gray-700 hover:bg-gray-100 flex gap-2 items-center text-xs font-semibold"
                   >
                     <ExternalLink size={14} /> View
                   </a>
 
+                  {/* Smart Download Button - Uses Blob Fetch */}
                   <button
-                    onClick={() => forceDownload(file.url, file.filename)}
+                    onClick={() => handleHistoryDownload(file.filename)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex gap-2 items-center text-xs font-semibold"
                   >
                     <Download size={14} /> Download
@@ -735,8 +793,8 @@ export default function Home() {
       )}
 
       {/* FOOTER SECTION */}
-      <div className="mt-auto border-t border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-gray-500">
+      <div className="mt-auto border-t bottom-0 border-gray-200 bg-white">
+        <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <Image
               src="/logo.png"
